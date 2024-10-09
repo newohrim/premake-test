@@ -17,8 +17,7 @@ env:
 
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
-  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Debug
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix  
 
 permissions:
   contents: read
@@ -26,12 +25,17 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        BUILD_CONFIGURATION: [Debug, DebugEditor, Release, ReleaseEditor]
+        BUILD_PLATFORM: [Win64] # Win32 is not supported yet
 
     steps:
     - uses: actions/checkout@v4
 
     - name: run premake5
-      run: ./premake5.exe vs2022
+      run: ./premake5 vs2022
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
@@ -42,8 +46,8 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: nuget restore ${{env.SOLUTION_FILE_PATH}}
 
-    - name: Build
+    - name: Build ${{matrix.BUILD_CONFIGURATION}} ${{matrix.BUILD_PLATFORM}}
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=Win64 ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=${{matrix.BUILD_CONFIGURATION}} /p:Platform=${{matrix.BUILD_PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
