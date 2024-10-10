@@ -142,11 +142,9 @@ MeshData GatherMeshData(const aiScene* scene, int meshIdx)
     if (mesh->GetNumUVChannels() > 0 && mesh->HasTextureCoords(TEXCOORD_IDX)) {
         const uint32_t uvCompNum = mesh->mNumUVComponents[TEXCOORD_IDX];
         floatsNum += mesh->mNumVertices * uvCompNum;
-        pipeline.push_back([&](int idx) {
+        pipeline.emplace_back([&res, uvCompNum, mesh](int idx) {
             for (uint32_t i = 0; i < uvCompNum; ++i) {
                 res.vertFloats.push_back(mesh->mTextureCoords[TEXCOORD_IDX][idx][i]);
-                if (res.vertFloats.back() > 905 && res.vertFloats.back() < 906) {
-                }
             }
         });
         DXGI_FORMAT uvFormat;
@@ -180,7 +178,7 @@ MeshData GatherMeshData(const aiScene* scene, int meshIdx)
         const aiVector3D& vert = mesh->mVertices[i];
         res.boundingSphereRadius = max(res.boundingSphereRadius, vert.SquareLength());
         addVector(vert);
-        for (auto stage : pipeline) {
+        for (auto& stage : pipeline) {
             stage(i);
         }
     }
